@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Pod-POM-View-DocBook
-version:            0.02
+version:            0.03
 abstract:           DocBook View for POD Object Model
 author:
     - Andrew Ford <A.Ford@ford-mason.co.uk>

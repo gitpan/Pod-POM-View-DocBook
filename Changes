@@ -9,8 +9,20 @@
 #   Andrew Ford   <A.Ford@ford-mason.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes 4099 2009-02-25 06:37:06Z andrew $
+# $Id: Changes 4102 2009-02-25 22:29:53Z andrew $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 0.03  25-Feb-2009
+#------------------------------------------------------------------------
+
+* reworked the title-casing of section titles (triggered by the the
+  "titlecasing" option)
+
+* reorganized testcases such that each test case consists of a pod file
+  (input), xml file (expected output) and a yml file (options -
+  optional).  t/TestUtils.pm was rewritten to read the trios of files
+  that define tests.
 
 
 #------------------------------------------------------------------------
