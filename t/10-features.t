@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w                                         # -*- perl -*-
-# $Id: 10-features.t 4093 2009-02-24 22:07:12Z andrew $
+# $Id: 10-features.t 4098 2009-02-25 06:34:45Z andrew $
 
 use strict;
 use Cwd qw(abs_path);
@@ -279,7 +279,7 @@ That was it.
 
 <para>This is a test of verbatim text handling.</para>
 
-<verbatim><[CDATA[    This is verbatim text.
+<verbatim><![CDATA[    This is verbatim text.
     This is more verbatim text.]]></verbatim>
 
 <para>That was it.</para>

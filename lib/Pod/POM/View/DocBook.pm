@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DocBook.pm 4094 2009-02-24 22:08:40Z andrew $
+#   $Id: DocBook.pm 4099 2009-02-25 06:37:06Z andrew $
 #
 # TODO
 #   * get all the view_* methods outputting valid DocBook XML
@@ -41,7 +41,7 @@ use List::MoreUtils qw(firstidx);
 use constant DEFAULT_ROOT_ELEMENT    => 'article';
 use constant DEFAULT_TOPSECT_ELEMENT => 'sect1';
 
-our $VERSION = '0.01'; # Don't forget to update the VERSION section in the POD!!!
+our $VERSION = '0.02'; # Don't forget to update the VERSION section in the POD!!!
 
 my $INIT_CAPS   = 0;
 my $XML_PROTECT = 0;
@@ -310,7 +310,7 @@ sub view_verbatim {
         s/</&lt;/g;
         s/>/&gt;/g;
     }
-    return "\n<verbatim><[CDATA[$text]]></verbatim>\n\n";
+    return "\n<verbatim><![CDATA[$text]]></verbatim>\n\n";
 }
 
 
@@ -663,7 +663,7 @@ Andrew Ford, C<< <A.Ford@ford-mason.co.uk> >>
 
 =head1 VERSION
 
-This is version 0.01 of C<Pod::POM::View::DocBook>.  
+This is version 0.02 of C<Pod::POM::View::DocBook>.  
 
 
 =head1 BUGS AND LIMITATIONS
@@ -706,6 +706,18 @@ L<http://cpanratings.perl.org/d/Pod-POM-View-DocBook>
 =item * Search CPAN
 
 L<http://search.cpan.org/dist/Pod-POM-View-DocBook>
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item * L<perlpodspec>
+
+=item * L<perlpod>
+
+=item * L<Pod::DocBook>
 
 =back
 
