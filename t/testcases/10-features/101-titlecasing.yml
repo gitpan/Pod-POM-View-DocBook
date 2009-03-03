@@ -1,4 +1,4 @@
 desc: sectioning with title-casing
 viewoptions:
-  initcaptitles: 1
+  titlecasing: 1
   preservecase: XYZZY fubar

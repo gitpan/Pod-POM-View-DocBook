@@ -25,7 +25,9 @@ t/testcases/10-features/101-titlecasing.yml
 t/testcases/10-features/200-entities.pod
 t/testcases/10-features/200-entities.xml
 t/testcases/10-features/300-begin-docbook.pod
-t/testcases/10-features/300-block-simple.pod
+t/testcases/10-features/300-blockquote.pod
+t/testcases/10-features/300-blockquote.xml
+t/testcases/10-features/300-blockquote.yml
 t/testcases/10-features/800-options.pod
 t/testcases/10-features/800-options.xml
 t/testcases/10-features/800-options.yml

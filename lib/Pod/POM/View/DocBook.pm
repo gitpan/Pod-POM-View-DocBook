@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DocBook.pm 4101 2009-02-25 22:29:21Z andrew $
+#   $Id: DocBook.pm 4110 2009-03-03 09:59:02Z andrew $
 #
 # TODO
 #   * get all the view_* methods outputting valid DocBook XML
@@ -45,7 +45,7 @@ use constant DEFAULT_TOPSECT_ELEMENT => 'sect1';
 
 
 # Don't forget to update the VERSION section in the POD!!!
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 
 our $DEBUG   = 0 unless defined $DEBUG;
@@ -262,7 +262,7 @@ sub _view_headn {
     my $title = $head->title;
     if (ref $self and $self->{titlecasing}) {
 #        $title = clone($title);
-        $self->_title_case_seq($title, $self->{casepreserve});
+        $self->_title_case_seq($title, $self->{preservecase});
     }
 
     $title = $title->present($self, "head$level");
@@ -297,11 +297,10 @@ sub view_head4 {
 
 
 #------------------------------------------------------------------------
-# view_over($self, $pod)
+# view_over($self, $over)
 #
-# View method for =over.  Maps to some sort of list
-# Should check the format of each of the items to determine which sort 
-# of list
+# View method for =over.  Maps to some sort of list - except if the content
+# contains no "=item"s in which case it is a blockquote.
 #------------------------------------------------------------------------
 
 sub view_over {
@@ -310,26 +309,34 @@ sub view_over {
 
     DEBUG("view_over");
 
-    my $items = $over->item();
-    return "" unless @$items;
+    my $items   = $over->item();
 
-    my $first_title = $items->[0]->title();
+    return '' unless @$items || @{$over->content};
 
-    if ($first_title =~ /^\s*\*\s*/) {
-        # '=item *' => <ul>
-        $start = "<itemizedlist>\n";
-        $end   = "</itemizedlist>\n";
-        $strip = qr/^\s*\*\s*/;
-    }
-    elsif ($first_title =~ /^\s*\d+\.?\s*/) {
-        # '=item 1.' or '=item 1 ' => <ol>
-        $start = "<orderedlist>\n";
-        $end   = "</orderedlist>\n";
-        $strip = qr/^\s*\d+\.?\s*/;
+    if (@$items) {
+        my $first_title = $items->[0]->title();
+
+        if ($first_title =~ /^\s*\*\s*/) {
+            # '=item *' => <ul>
+            $start = "<itemizedlist>\n";
+            $end   = "</itemizedlist>\n";
+            $strip = qr/^\s*\*\s*/;
+        }
+        elsif ($first_title =~ /^\s*\d+\.?\s*/) {
+            # '=item 1.' or '=item 1 ' => <ol>
+            $start = "<orderedlist>\n";
+            $end   = "</orderedlist>\n";
+            $strip = qr/^\s*\d+\.?\s*/;
+        }
+        else {
+            $start = "<itemizedlist>\n";
+            $end   = "</itemizedlist>\n";
+            $strip = '';
+        }
     }
     else {
-        $start = "<itemizedlist>\n";
-        $end   = "</itemizedlist>\n";
+        $start = "<blockquote>\n";
+        $end   = "</blockquote>\n";
         $strip = '';
     }
 
@@ -337,7 +344,7 @@ sub view_over {
     push(@$overstack, $strip);
     my $content = $over->content->present($self);
     pop(@$overstack);
-    
+
     return "\n"
         . $start
         . $content
@@ -611,7 +618,7 @@ Pod::POM::View::DocBook - DocBook XML view of a Pod Object Model
 
     use Pod::POM;
     use Pod::POM::View::DocBook;
-    
+
     $parser = Pod::POM->new;
     $pom    = $parser->parse($file);
 
@@ -640,7 +647,7 @@ content as a DocBook XML document.
 
 Use it like any other C<Pod::POM::View> subclass.
 
-If C<<Pod::POM->default_view>> is passed this modules class name then
+If C<< Pod::POM-E<gt>default_view >> is passed this modules class name then
 when the C<present> method is called on the Pod object, this constructor
 will be called without any options.  If you want to override the default
 options then you have to create a view object and pass it to
@@ -756,11 +763,11 @@ The following methods are specializations of the methods in L<Pod::POM::View>:
 
 =head1 AUTHOR
 
-Andrew Ford, C<< <A.Ford@ford-mason.co.uk> >>
+Andrew Ford, C<< E<lt>A.Ford@ford-mason.co.ukE<gt> >>
 
 =head1 VERSION
 
-This is version 0.03 of C<Pod::POM::View::DocBook>.  
+This is version 0.04 of C<Pod::POM::View::DocBook>.  
 
 
 =head1 BUGS AND LIMITATIONS
