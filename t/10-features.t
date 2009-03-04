@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w                                         # -*- perl -*-
-# $Id: 10-features.t 4100 2009-02-25 22:20:47Z andrew $
+# $Id: 10-features.t 4114 2009-03-04 22:28:43Z andrew $
 
 use strict;
 use Cwd qw(abs_path);
@@ -10,10 +10,10 @@ use Pod::POM;
 use Pod::POM::View::DocBook;
 use XML::LibXML;
 
-use Data::Dumper;
+# use Data::Dumper; # for debugging
 
 use Test::More;
-use Test::Differences;
+use Test::XML;
 
 use TestUtils;
 
@@ -40,7 +40,7 @@ foreach my $test (@tests) {
     my $result = $pom->present($view);
 
 
-    eq_or_diff(normalize($result), normalize($test->expect),
+    is_xml(normalize($result), normalize($test->expect),
 	       "matched output: " . $test->description);
 
     eval { 

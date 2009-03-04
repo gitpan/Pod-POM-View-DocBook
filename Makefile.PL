@@ -1,19 +1,20 @@
-# $Id: Makefile.PL 4109 2009-03-03 09:57:27Z andrew $
+# $Id: Makefile.PL 4114 2009-03-04 22:28:43Z andrew $
 
 use ExtUtils::MakeMaker;
 
 my %opts = (
-    'NAME'	   => 'Pod::POM::View::DocBook',
+    'NAME'         => 'Pod::POM::View::DocBook',
     'VERSION_FROM' => 'lib/Pod/POM/View/DocBook.pm',
     'PREREQ_PM'    => { 
         'List::MoreUtils' => 0,
         'Pod::POM::View'  => 0,
+        'Test::XML'       => 0,
         'Text::Wrap'      => 0,
         'XML::LibXML'     => 0,
     },
     'dist'         => {
-	'COMPRESS' => 'gzip',
-	'SUFFIX'   => 'gz',
+        'COMPRESS' => 'gzip',
+        'SUFFIX'   => 'gz',
     },
 
 );

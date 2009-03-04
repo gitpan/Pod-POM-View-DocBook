@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DocBook.pm 4110 2009-03-03 09:59:02Z andrew $
+#   $Id: DocBook.pm 4114 2009-03-04 22:28:43Z andrew $
 #
 # TODO
 #   * get all the view_* methods outputting valid DocBook XML
@@ -45,7 +45,7 @@ use constant DEFAULT_TOPSECT_ELEMENT => 'sect1';
 
 
 # Don't forget to update the VERSION section in the POD!!!
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 
 our $DEBUG   = 0 unless defined $DEBUG;
@@ -767,7 +767,7 @@ Andrew Ford, C<< E<lt>A.Ford@ford-mason.co.ukE<gt> >>
 
 =head1 VERSION
 
-This is version 0.04 of C<Pod::POM::View::DocBook>.  
+This is version 0.05 of C<Pod::POM::View::DocBook>.  
 
 
 =head1 BUGS AND LIMITATIONS
