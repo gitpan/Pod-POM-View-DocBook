@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DocBook.pm 4115 2009-03-05 08:01:09Z andrew $
+#   $Id: DocBook.pm 4116 2009-03-05 23:21:30Z andrew $
 #
 # TODO
 #   * get all the view_* methods outputting valid DocBook XML
@@ -46,7 +46,7 @@ use constant DEFAULT_TOPSECT_ELEMENT => 'sect1';
 
 #########################################################################
 # Don't forget to update the VERSION section in the POD!!!
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 #########################################################################
 
 our $DEBUG   = 0 unless defined $DEBUG;
@@ -451,18 +451,29 @@ sub view_seq_entity {
     return "&$entity;"
 }
 
+#------------------------------------------------------------------------
+# view_seq_link($self, $link)
+#
+# View sequence method for links
+#  L<name>               link to Perl manual page
+#  L<name(n)             link to Unix man page
+#  L<name/"sec">         link to section in man page
+#  L<text|name>          link with display text
+#  L<text|/sec>          link to section in this doc
+#  L<scheme:address>     link to absolute URL (text is not allowed)
+#------------------------------------------------------------------------
 
 sub view_seq_link {
     my ($self, $link) = @_;
 
     # view_seq_text has already taken care of L<http://example.com/>
-    if ($link =~ /^<a href=/ ) {
+    if ($link =~ /^<ulink url=/ ) {
         return $link;
     }
 
     # full-blown URL's are emitted as-is
     if ($link =~ m{^\w+://}s ) {
-        return make_href($link);
+        return make_ulink($link);
     }
 
     $link =~ s/\n/ /g;   # undo line-wrapped tags
@@ -501,7 +512,7 @@ sub view_seq_link {
     $url .= "#$section" if defined $url and
         defined $section and length $section;
 
-    return make_href($url, $linktext);
+    return make_ulink($url, $linktext);
 }
 
 
@@ -529,16 +540,16 @@ sub view_seq_link_transform_path {
 }
 
 
-sub make_href {
+sub make_ulink {
     my($url, $title) = @_;
 
     if (!defined $url) {
-        return defined $title ? "<i>$title</i>"  : '';
+        return defined $title ? "<emphasis>$title</emphasis>"  : '';
     }
 
     $title = $url unless defined $title;
     #print "$url, $title\n";
-    return qq{<a href="$url">$title</a>};
+    return qq{<ulink url="$url">$title</ulink>};
 }
 
 
@@ -591,7 +602,7 @@ sub view_seq_text {
              |                       # or else
                  $                   #   then end of the string
          )
-       }{<a href="$1">$1</a>}igox;
+       }{<ulink url="$1">$1</ulink>}igox;
 
      return $text;
 }
@@ -716,7 +727,7 @@ The following methods are specializations of the methods in L<Pod::POM::View>:
 
 =over 4
 
-=item make_href
+=item make_ulink
 
 =item view_begin
 
@@ -768,7 +779,7 @@ Andrew Ford, C<< E<lt>A.Ford@ford-mason.co.ukE<gt> >>
 
 =head1 VERSION
 
-This is version 0.06 of C<Pod::POM::View::DocBook>.  
+This is version 0.07 of C<Pod::POM::View::DocBook>.  
 
 
 =head1 BUGS AND LIMITATIONS
