@@ -18,7 +18,7 @@
 #   modify it under the same terms as Perl itself.
 #
 # REVISION
-#   $Id: DocBook.pm 4116 2009-03-05 23:21:30Z andrew $
+#   $Id: DocBook.pm 4118 2009-03-08 09:25:39Z andrew $
 #
 # TODO
 #   * get all the view_* methods outputting valid DocBook XML
@@ -46,7 +46,7 @@ use constant DEFAULT_TOPSECT_ELEMENT => 'sect1';
 
 #########################################################################
 # Don't forget to update the VERSION section in the POD!!!
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 #########################################################################
 
 our $DEBUG   = 0 unless defined $DEBUG;
@@ -109,6 +109,23 @@ sub new {
             }
         }
     }
+
+    $self->{preservecase} ||= {};
+    if (!ref $self->{preservecase}) {
+        $self->{preservecase} = { map { lc($_) => 1 } split(/[\,\|\s]+/, $self->{preservecase}) };
+    }
+    elsif (ref $self->{preservecase} eq  'ARRAY') {
+        $self->{preservecase} = { map { lc($_) => 1 } @{$self->{preservecase}} };
+    }
+
+    $self->{forcecase} ||= {};
+    if (!ref $self->{forcecase}) {
+        $self->{forcecase} = { map { lc($_) => $_ } split(/[\,\|\s]+/, $self->{forcecase}) };
+    }
+    elsif (ref $self->{forcecase} eq  'ARRAY') {
+        $self->{forcecase} = { map { lc($_) => $_ } @{$self->{forcecase}} };
+    }
+
     
     $self->{root}      ||= DEFAULT_ROOT_ELEMENT;
     $self->{topsect}   ||= DEFAULT_TOPSECT_ELEMENT;
@@ -200,7 +217,7 @@ sub view_pod {
 
 
 #------------------------------------------------------------------------
-# _title_case_text($self, $text, $casepreserve, $is_subsequent)
+# _title_case_text($self, $text, $forcecase, $preservecase, $is_subsequent)
 #
 # Convert the case of words in a text string to "title case".  There are
 # a couple of implementations of this (Text::Autoformat and 
@@ -211,15 +228,25 @@ sub view_pod {
 
 
 sub _title_case_text {
-    my ($self, $text, $casepreserve, $is_subsequent) = @_;
+    my ($self, $text, $forcecase, $preservecase, $is_subsequent) = @_;
 
     my @words = grep { $_ } split(/\s+/, $text);
     foreach my $word (@words) {
-        next if $casepreserve->{lc $word};
-        $word = lc $word;
-        $word = ucfirst $word unless $dont_ucfirst{$word};
+        my ($pre, $theword, $post) = ($word =~ /^(\W)*(\w.*?)(\W*)$/);
+        my $lc_word = lc $theword;
+        if ($forcecase->{$lc_word}) {
+            $theword = $forcecase->{$lc_word};
+        }
+        elsif (!$preservecase->{$lc_word}) {
+            $theword = $lc_word;
+            $theword = ucfirst $theword unless $dont_ucfirst{$lc_word} and $is_subsequent;
+        }
+        $is_subsequent++;
+
+        # any of $pre, $theword and $post may be undefined
+        no warnings 'uninitialized';
+        $word = $pre . $theword . $post;
     }
-    $words[0] = ucfirst $words[0] unless $is_subsequent or $casepreserve->{$words[0]};
     my $newtext = join(" ", @words);
     $text =~ s/(\S.*\S)/$newtext/s;
     return $text;
@@ -227,27 +254,18 @@ sub _title_case_text {
 
 
 sub _title_case_seq {
-    my ($self, $node, $casepreserve, $is_subsequent) = @_;
+    my ($self, $node, $forcecase, $preservecase, $is_subsequent) = @_;
 
     return unless ref $node;
-
-    $casepreserve ||= {};
-    if (!ref $casepreserve) {
-        $casepreserve = { map { lc($_) => 1 } split(/[\,\|\s]+/, $casepreserve) };
-    }
-    elsif (ref $casepreserve eq  'ARRAY') {
-        $casepreserve = { map { lc($_) => 1 } @$casepreserve };
-    }
-
 
     $node = $$node;
     if ($node->[CMD] =~ /^[BI]?$/) {
         foreach ( @{$node->[CONTENT]} ) {
             if (ref $_) {
-                $self->_title_case_seq($_, $casepreserve, $is_subsequent);
+                $self->_title_case_seq($_, $forcecase, $preservecase, $is_subsequent);
             }
             else {
-                $_ = $self->_title_case_text($_, $casepreserve, $is_subsequent);
+                $_ = $self->_title_case_text($_, $forcecase, $preservecase, $is_subsequent);
             }
             $is_subsequent = 1;
         }
@@ -263,7 +281,7 @@ sub _view_headn {
     my $title = $head->title;
     if (ref $self and $self->{titlecasing}) {
 #        $title = clone($title);
-        $self->_title_case_seq($title, $self->{preservecase});
+        $self->_title_case_seq($title, $self->{forcecase}, $self->{preservecase});
     }
 
     $title = $title->present($self, "head$level");
@@ -406,12 +424,12 @@ sub view_textblock {
 
 sub view_verbatim {
     my ($self, $text) = @_;
-    for ($text) {
-        s/&/&amp;/g;
-        s/</&lt;/g;
-        s/>/&gt;/g;
-    }
-    return "\n<verbatim><![CDATA[$text]]></verbatim>\n\n";
+#    for ($text) {
+#        s/&/&amp;/g;
+#        s/</&lt;/g;
+#        s/>/&gt;/g;
+#    }
+    return "\n<programlisting><![CDATA[$text]]></programlisting>\n\n";
 }
 
 
@@ -473,7 +491,7 @@ sub view_seq_link {
 
     # full-blown URL's are emitted as-is
     if ($link =~ m{^\w+://}s ) {
-        return make_ulink($link);
+        return _make_ulink($link);
     }
 
     $link =~ s/\n/ /g;   # undo line-wrapped tags
@@ -512,7 +530,7 @@ sub view_seq_link {
     $url .= "#$section" if defined $url and
         defined $section and length $section;
 
-    return make_ulink($url, $linktext);
+    return _make_ulink($url, $linktext);
 }
 
 
@@ -540,7 +558,7 @@ sub view_seq_link_transform_path {
 }
 
 
-sub make_ulink {
+sub _make_ulink {
     my($url, $title) = @_;
 
     if (!defined $url) {
@@ -650,14 +668,11 @@ Pod::POM::View::DocBook - DocBook XML view of a Pod Object Model
 
 =head1 DESCRIPTION
 
-I<DocBook> is a
+This module provides a view for C<Pod::POM> that outputs the content as a DocBook XML document.
+(I<DocBook> is an XML schema particularly suited for computing articles and books - see
+L<http://www.docbook.org/> for details.)
 
-See L<http://www.docbook.org/> for details.
-
-This module provides a view for C<Pod::POM> that outputs the
-content as a DocBook XML document.
-
-Use it like any other C<Pod::POM::View> subclass.
+Use the module like any other C<Pod::POM::View> subclass.
 
 If C<< Pod::POM-E<gt>default_view >> is passed this modules class name then
 when the C<present> method is called on the Pod object, this constructor
@@ -672,6 +687,7 @@ inclusion in another document), you might use the following code:
     $view = Pod::Pom::View::DocBook( root => 'chapter' );
     print $pom->present($view);
 
+Specifying the root element type determines how the C<=headI<N>> sections map to DocBook sections.
 
 =head1 SUBROUTINES/METHODS
 
@@ -680,7 +696,7 @@ module supports the two following methods:
 
 =over 4
 
-=item new()
+=item C<new()>
 
 Constructor for the view object.  
 
@@ -706,68 +722,77 @@ extracted as the title of the root element (default is true)
 
 if true then title text is converted to initial caps format, i.e. all
 words are initial capped except for stopwords such as "a", "the", "and",
-"of", "on", etc (default is enabled)
+"of", "on", etc.  Code sequences within titles are not left alone.  (default is enabled)
 
 =item C<preservecase>
 
 list of words for which case should be preserved in titles.  The list may be an array ref or a
 string of words separated by spaces, commas or vertical bar characters.
 
+=item C<forcecase>
+
+list of words for which the case in titles should be as specified.  The list may be an array ref or
+a string of words separated by spaces, commas or vertical bar characters.
+
+=item C<converthtmlblocks>
+
+if true then the content of HTML blocks (indicated with C<=begin html> or C<=for html>) will be
+parsed and converted to DocBook markup.  The contents of blocks marked with C<docbook> are always
+included. (NOT YET IMPLEMENTED)
+
 =back
 
-
-
-=item view( $type, $node )
+=item C<view( $type, $node )>
 
 Return the given Pod::POM node as formatted by the View.
 
 =back
 
+=head2 INTERNAL METHODS
+
 The following methods are specializations of the methods in L<Pod::POM::View>:
 
 =over 4
 
-=item make_ulink
+=item C<view_begin>
 
-=item view_begin
+=item C<view_for>
 
-=item view_for
+=item C<view_head1>
 
-=item view_head1
+=item C<view_head2>
 
-=item view_head2
+=item C<view_head3>
 
-=item view_head3
+=item C<view_head4>
 
-=item view_head4
+=item C<view_item>
 
-=item view_item
+=item C<view_over>
 
-=item view_over
+=item C<view_pod>
 
-=item view_pod
+=item C<view_seq_bold>
 
-=item view_seq_bold
+=item C<view_seq_code>
 
-=item view_seq_code
+=item C<view_seq_entity>
 
-=item view_seq_entity
+=item C<view_seq_file>
 
-=item view_seq_file
+=item C<view_seq_italic>
 
-=item view_seq_italic
+=item C<view_seq_link>
 
-=item view_seq_link
+=item C<view_seq_link_transform_path>
 
-=item view_seq_link_transform_path
+=item C<view_seq_space>
 
-=item view_seq_space
+=item C<view_seq_text>
 
-=item view_seq_text
+=item C<view_textblock>
 
-=item view_textblock
-
-=item view_verbatim
+=item C<view_verbatim>
 
 =item DEBUG
 
@@ -779,7 +804,7 @@ Andrew Ford, C<< E<lt>A.Ford@ford-mason.co.ukE<gt> >>
 
 =head1 VERSION
 
-This is version 0.07 of C<Pod::POM::View::DocBook>.  
+This is version 0.08 of C<Pod::POM::View::DocBook>.  
 
 
 =head1 BUGS AND LIMITATIONS

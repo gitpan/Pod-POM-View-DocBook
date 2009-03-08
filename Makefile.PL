@@ -1,4 +1,4 @@
-# $Id: Makefile.PL 4115 2009-03-05 08:01:09Z andrew $
+# $Id: Makefile.PL 4117 2009-03-08 09:21:04Z andrew $
 
 use ExtUtils::MakeMaker;
 
@@ -13,6 +13,7 @@ my %opts = (
         'Text::Wrap'          => 0,
 
         # Required for testing:
+        'Class::Accessor'     => 0,
         'File::Slurp'         => 0,
         'FindBin'             => 0,
         'Test::XML'           => 0,

@@ -9,8 +9,25 @@
 #   Andrew Ford   <A.Ford@ford-mason.co.uk>
 #
 #------------------------------------------------------------------------
-# $Id: Changes 4116 2009-03-05 23:21:30Z andrew $
+# $Id: Changes 4117 2009-03-08 09:21:04Z andrew $
 #========================================================================
+
+#------------------------------------------------------------------------
+# Version 0.08  08-Mar-2009
+#------------------------------------------------------------------------
+
+* update documentation
+
+* handle casing of words surrounded with non-word characters
+  (e.g. punctuation)
+
+* implement "forcecase" option and rename "casepreserve" option to
+  "preservecase"
+
+* fix handling of verbatim blocks (use <programlisting>, not spurious
+  <verbatim> element)
+
+* added Class::Accessor to prerequisites (used in unit tests)
 
 #------------------------------------------------------------------------
 # Version 0.07  05-Mar-2009
